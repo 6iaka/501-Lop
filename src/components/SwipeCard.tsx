@@ -1,11 +1,13 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
-import { motion, PanInfo } from 'framer-motion';
+import React, { useState } from 'react';
+import TinderCard from 'react-tinder-card';
+import { motion } from 'framer-motion';
 
 interface SwipeCardProps {
   item: {
     id: string;
+    channelId: string;
     name: string;
     imageUrl: string;
     description?: string;
@@ -14,98 +16,71 @@ interface SwipeCardProps {
 }
 
 export default function SwipeCard({ item, onSwipe }: SwipeCardProps) {
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragInfo, setDragInfo] = useState<PanInfo | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
-  const cardRef = useRef<HTMLDivElement>(null);
 
-  const handleDragEnd = (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-    const threshold = 100;
-    const offsetX = info.offset.x;
-
-    if (Math.abs(offsetX) > threshold) {
-      handleSwipe(offsetX > 0 ? 'right' : 'left');
+  const handleSwipe = (direction: string) => {
+    if (direction === 'left' || direction === 'right') {
+      setIsAnimating(true);
+      onSwipe(direction as 'left' | 'right');
     }
-    setDragInfo(null);
-    setIsDragging(false);
-  };
-
-  const handleDrag = (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-    setDragInfo(info);
-  };
-
-  const handleSwipe = (direction: 'left' | 'right') => {
-    if (isAnimating) return;
-    setIsAnimating(true);
-    onSwipe(direction);
   };
 
   return (
-    <div className="relative w-full max-w-sm mx-auto">
-      <motion.div
-        ref={cardRef}
-        className="relative bg-white rounded-xl shadow-lg overflow-hidden"
-        drag="x"
-        dragConstraints={{ left: 0, right: 0 }}
-        onDragStart={() => setIsDragging(true)}
-        onDrag={handleDrag}
-        onDragEnd={handleDragEnd}
-        whileTap={{ scale: 0.95 }}
-        style={{ touchAction: 'none' }}
-        animate={{
-          rotate: dragInfo ? dragInfo.offset.x * 0.05 : 0,
-          x: isAnimating ? (dragInfo?.offset.x > 0 ? 500 : -500) : 0,
-          opacity: isAnimating ? 0 : 1,
-        }}
-        transition={{ duration: 0.3 }}
-        onAnimationComplete={() => setIsAnimating(false)}
-      >
-        <div className="relative h-64">
-          <img
-            src={item.imageUrl}
-            alt={item.name}
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
-        </div>
-        
-        <div className="p-4">
-          <h3 className="text-xl font-bold text-gray-800">{item.name}</h3>
-          {item.description && (
-            <p className="mt-2 text-gray-600 line-clamp-2">{item.description}</p>
-          )}
-        </div>
-
-        {isDragging && dragInfo && (
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className={`text-2xl font-bold ${
-              dragInfo.offset.x > 0 ? 'text-green-500' : 'text-red-500'
-            }`}>
-              {dragInfo.offset.x > 0 ? 'KEEP' : 'REMOVE'}
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 p-4">
+      <div className="relative w-full max-w-sm h-[600px]">
+        <TinderCard
+          className="absolute w-full h-full"
+          onSwipe={handleSwipe}
+          preventSwipe={['up', 'down']}
+        >
+          <motion.div
+            className="relative h-full w-full rounded-3xl overflow-hidden shadow-2xl"
+            initial={{ scale: 1 }}
+            animate={isAnimating ? { scale: 0.95 } : { scale: 1 }}
+            transition={{ duration: 0.2 }}
+          >
+            <div
+              className="absolute inset-0 bg-cover bg-center"
+              style={{ backgroundImage: `url(${item.imageUrl})` }}
+            >
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
             </div>
-          </div>
-        )}
-      </motion.div>
+            
+            <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
+              <h3 className="text-3xl font-bold mb-2">{item.name}</h3>
+              {item.description && (
+                <p className="text-gray-200 text-sm line-clamp-2">{item.description}</p>
+              )}
+            </div>
 
-      <div className="flex justify-center gap-4 mt-6">
-        <button
-          onClick={() => handleSwipe('left')}
-          className="flex items-center gap-2 px-6 py-3 bg-red-500 text-white rounded-full shadow-lg hover:bg-red-600 transition-colors"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd" />
-          </svg>
-          Remove
-        </button>
-        <button
-          onClick={() => handleSwipe('right')}
-          className="flex items-center gap-2 px-6 py-3 bg-green-500 text-white rounded-full shadow-lg hover:bg-green-600 transition-colors"
-        >
-          Keep
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
-          </svg>
-        </button>
+            <div className="absolute top-4 right-4">
+              <div className="bg-black/50 rounded-full p-2">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+            </div>
+          </motion.div>
+        </TinderCard>
+
+        <div className="absolute -bottom-20 left-0 right-0 flex justify-center gap-8">
+          <button
+            onClick={() => handleSwipe('left')}
+            className="w-16 h-16 rounded-full bg-white shadow-lg flex items-center justify-center hover:bg-red-100 transition-colors"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+          <button
+            onClick={() => handleSwipe('right')}
+            className="w-16 h-16 rounded-full bg-white shadow-lg flex items-center justify-center hover:bg-green-100 transition-colors"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+          </button>
+        </div>
       </div>
     </div>
   );
