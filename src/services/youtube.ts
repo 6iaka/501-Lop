@@ -25,13 +25,7 @@ export async function getYouTubeSubscriptions(accessToken: string) {
       }
 
       const data = await response.json();
-      console.log('YouTube API Response Page Data:', {
-        pageInfo: data.pageInfo,
-        itemsCount: data.items?.length,
-        hasNextPage: !!data.nextPageToken,
-        totalResults: data.pageInfo?.totalResults,
-        resultsPerPage: data.pageInfo?.resultsPerPage
-      });
+      console.log('YouTube API Response Data:', JSON.stringify(data, null, 2));
 
       if (data.items && data.items.length > 0) {
         allSubscriptions = [...allSubscriptions, ...data.items];
@@ -45,17 +39,50 @@ export async function getYouTubeSubscriptions(accessToken: string) {
 
     console.log(`Total subscriptions fetched: ${allSubscriptions.length}`);
 
+    // Fetch channel details for each subscription
+    const channelDetailsPromises = allSubscriptions.map(async (item) => {
+      const channelResponse = await fetch(
+        `https://www.googleapis.com/youtube/v3/channels?part=brandingSettings&id=${item.snippet.resourceId.channelId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            Accept: 'application/json',
+          },
+        }
+      );
+
+      if (!channelResponse.ok) {
+        console.error('Failed to fetch channel details for:', item.snippet.title);
+        return null;
+      }
+
+      const channelData = await channelResponse.json();
+      return channelData.items?.[0] || null;
+    });
+
+    const channelDetails = await Promise.all(channelDetailsPromises);
+
     // Sort alphabetically by channel name
     const sortedSubscriptions = allSubscriptions
-      .map((item: any) => ({
-        id: item.id,
-        channelId: item.snippet.resourceId.channelId,
-        name: item.snippet.title,
-        imageUrl: item.snippet.thumbnails.default.url,
-        description: item.snippet.description,
-      }))
+      .map((item: any) => {
+        const thumbnailUrl = item.snippet.thumbnails.high?.url || 
+                           item.snippet.thumbnails.medium?.url || 
+                           item.snippet.thumbnails.default.url;
+        
+        // Use our proxy for the image URL
+        const proxiedImageUrl = thumbnailUrl ? `/api/proxy-image?url=${encodeURIComponent(thumbnailUrl)}` : null;
+        
+        return {
+          id: item.id,
+          channelId: item.snippet.resourceId.channelId,
+          name: item.snippet.title,
+          imageUrl: proxiedImageUrl || `https://via.placeholder.com/800x200/333333/ffffff?text=${encodeURIComponent(item.snippet.title)}`,
+          description: item.snippet.description,
+        };
+      })
       .sort((a, b) => a.name.localeCompare(b.name));
 
+    console.log('Processed subscriptions:', JSON.stringify(sortedSubscriptions, null, 2));
     return sortedSubscriptions;
   } catch (error: any) {
     console.error('Error in getYouTubeSubscriptions:', {
