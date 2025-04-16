@@ -4,6 +4,7 @@ import { useSession, signIn } from 'next-auth/react';
 import { useEffect, useState } from 'react';
 import { getYouTubeSubscriptions, unsubscribeFromChannel } from '../services/youtube';
 import SwipeCard from '../components/SwipeCard';
+import Script from 'next/script';
 
 interface Subscription {
   id: string;
@@ -91,15 +92,26 @@ export default function Home() {
           <p className="text-gray-300 mb-8 max-w-md">
             Sign in to manage your YouTube subscriptions. Swipe left to remove channels you no longer watch.
           </p>
-          <button
-            onClick={() => signIn('google', { callbackUrl: '/' })}
-            className="inline-flex items-center px-6 py-3 bg-red-600 text-white rounded-full shadow-lg hover:bg-red-700 transition-colors"
-          >
-            Sign in with Google
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
-            </svg>
-          </button>
+          <div className="flex flex-col gap-4 items-center">
+            <button
+              onClick={() => signIn('google', { callbackUrl: '/' })}
+              className="inline-flex items-center px-6 py-3 bg-red-600 text-white rounded-full shadow-lg hover:bg-red-700 transition-colors w-64 justify-center"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972c-3.332,0-6.033-2.701-6.033-6.032s2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814C17.503,2.988,15.139,2,12.545,2C7.021,2,2.543,6.477,2.543,12s4.478,10,10.002,10c8.396,0,10.249-7.85,9.426-11.748L12.545,10.239z"/>
+              </svg>
+              Sign in with Google
+            </button>
+            <button
+              onClick={() => alert('TikTok integration coming soon!')}
+              className="inline-flex items-center px-6 py-3 bg-black text-white rounded-full shadow-lg hover:bg-gray-900 transition-colors w-64 justify-center"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/>
+              </svg>
+              Sign in with TikTok
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -165,7 +177,8 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800">
+    <main className="flex min-h-screen flex-col items-center justify-center p-4 bg-gray-900">
+      <Script src="/register-sw.js" strategy="afterInteractive" />
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-2xl font-bold text-white">YouTube Cleaner</h1>
@@ -189,6 +202,6 @@ export default function Home() {
           />
         )}
       </div>
-    </div>
+    </main>
   );
 } 
