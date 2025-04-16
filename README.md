@@ -1,80 +1,46 @@
-# Swipe Cleaner 🧹
+# YouTube Subscription Cleaner
 
-A fun and simple mobile-friendly app that helps you clean up your digital life by swiping left or right through your YouTube subscriptions and Instagram followings.
+A mobile-friendly web application that helps you clean up your YouTube subscriptions through a simple swipe interface.
 
 ## Features
 
-- 🔐 Google Authentication
-- 👆 Swipe-based interface
-- 📱 Mobile-friendly design
-- 🎯 Easy subscription management
-- 📊 Progress tracking
+- 🔐 Secure Google OAuth authentication
+- 📱 Mobile-first design with swipe gestures
+- 🔄 Real-time subscription management
+- 🎨 Beautiful UI with smooth animations
+- 📊 View all your YouTube subscriptions
+
+## Tech Stack
+
+- Next.js 14
+- TypeScript
+- Tailwind CSS
+- NextAuth.js
+- YouTube Data API v3
 
 ## Getting Started
 
-### Prerequisites
-
-- Node.js 14.x or later
-- npm or yarn
-- Google OAuth credentials
-
-### Installation
-
-1. Clone the repository:
-```bash
-git clone https://github.com/yourusername/swipe-cleaner.git
-cd swipe-cleaner
-```
-
+1. Clone the repository
 2. Install dependencies:
-```bash
-npm install
-```
+   ```bash
+   npm install
+   ```
+3. Create a `.env.local` file with your Google OAuth credentials:
+   ```
+   GOOGLE_CLIENT_ID=your_client_id
+   GOOGLE_CLIENT_SECRET=your_client_secret
+   NEXTAUTH_URL=http://localhost:3000
+   NEXTAUTH_SECRET=your_secret_key
+   ```
+4. Run the development server:
+   ```bash
+   npm run dev
+   ```
 
-3. Set up environment variables:
-   - Create a `.env.local` file in the root directory
-   - Add the following variables:
-     ```
-     NEXTAUTH_URL=http://localhost:3000
-     NEXTAUTH_SECRET=your-secret-key-here
-     GOOGLE_CLIENT_ID=your-google-client-id
-     GOOGLE_CLIENT_SECRET=your-google-client-secret
-     ```
+## Deployment
 
-4. Get Google OAuth credentials:
-   - Go to the [Google Cloud Console](https://console.cloud.google.com/)
-   - Create a new project
-   - Enable the Google+ API
-   - Create OAuth 2.0 credentials
-   - Add `http://localhost:3000/api/auth/callback/google` to authorized redirect URIs
-
-### Running the Development Server
-
-```bash
-npm run dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-## Usage
-
-1. Sign in with your Google account
-2. Swipe right to keep a subscription
-3. Swipe left to remove a subscription
-4. Track your progress with the counter at the top
-
-## Built With
-
-- [Next.js](https://nextjs.org/)
-- [React](https://reactjs.org/)
-- [NextAuth.js](https://next-auth.js.org/)
-- [Framer Motion](https://www.framer.com/motion/)
-- [Tailwind CSS](https://tailwindcss.com/)
+This project is deployed on Vercel. Visit the live site at: [https://youtube-subscription-cleaner.vercel.app](https://youtube-subscription-cleaner.vercel.app)
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details. 
+Feel free to submit issues and enhancement requests! 

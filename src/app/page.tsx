@@ -3,10 +3,11 @@
 import { useState, useEffect } from 'react';
 import SwipeCard from '../components/SwipeCard';
 import { useSession, signIn, signOut } from 'next-auth/react';
-import { getYouTubeSubscriptions } from '../services/youtube';
+import { getYouTubeSubscriptions, unsubscribeFromChannel } from '../services/youtube';
 
 interface Subscription {
   id: string;
+  channelId: string;
   name: string;
   imageUrl: string;
   description?: string;
@@ -18,6 +19,7 @@ export default function Home() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isUnsubscribing, setIsUnsubscribing] = useState(false);
 
   useEffect(() => {
     async function fetchSubscriptions() {
@@ -65,12 +67,31 @@ export default function Home() {
     }
   }, [session, status]);
 
-  const handleSwipe = (direction: 'left' | 'right') => {
-    if (direction === 'left') {
-      // Handle unsubscribe
-      console.log('Unsubscribed from:', subscriptions[currentIndex].name);
+  const handleSwipe = async (direction: 'left' | 'right') => {
+    if (direction === 'left' && session?.accessToken) {
+      try {
+        setIsUnsubscribing(true);
+        const currentSubscription = subscriptions[currentIndex];
+        console.log('Attempting to unsubscribe from:', {
+          name: currentSubscription.name,
+          subscriptionId: currentSubscription.id,
+          channelId: currentSubscription.channelId
+        });
+        
+        await unsubscribeFromChannel(session.accessToken, currentSubscription.id);
+        console.log('Successfully unsubscribed from:', currentSubscription.name);
+        
+        // Remove the unsubscribed channel from the local state
+        setSubscriptions(prev => prev.filter(sub => sub.id !== currentSubscription.id));
+      } catch (err: any) {
+        console.error('Error unsubscribing:', err);
+        setError('Failed to unsubscribe. Please try again.');
+      } finally {
+        setIsUnsubscribing(false);
+      }
+    } else {
+      setCurrentIndex(prev => prev + 1);
     }
-    setCurrentIndex(prev => prev + 1);
   };
 
   if (status === 'loading' || isLoading) {

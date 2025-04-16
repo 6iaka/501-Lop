@@ -7,7 +7,7 @@ export async function getYouTubeSubscriptions(accessToken: string) {
     
     do {
       const response = await fetch(
-        `https://www.googleapis.com/youtube/v3/subscriptions?part=snippet&mine=true&maxResults=50&order=alphabetical${nextPageToken ? `&pageToken=${nextPageToken}` : ''}`,
+        `https://www.googleapis.com/youtube/v3/subscriptions?part=snippet,id&mine=true&maxResults=50&order=alphabetical${nextPageToken ? `&pageToken=${nextPageToken}` : ''}`,
         {
           headers: {
             Authorization: `Bearer ${accessToken}`,
@@ -48,7 +48,8 @@ export async function getYouTubeSubscriptions(accessToken: string) {
     // Sort alphabetically by channel name
     const sortedSubscriptions = allSubscriptions
       .map((item: any) => ({
-        id: item.snippet.resourceId.channelId,
+        id: item.id,
+        channelId: item.snippet.resourceId.channelId,
         name: item.snippet.title,
         imageUrl: item.snippet.thumbnails.default.url,
         description: item.snippet.description,
@@ -58,6 +59,47 @@ export async function getYouTubeSubscriptions(accessToken: string) {
     return sortedSubscriptions;
   } catch (error: any) {
     console.error('Error in getYouTubeSubscriptions:', {
+      message: error.message,
+      stack: error.stack,
+      response: error.response?.data
+    });
+    throw error;
+  }
+}
+
+export async function unsubscribeFromChannel(accessToken: string, subscriptionId: string) {
+  try {
+    console.log('Unsubscribing from subscription:', subscriptionId);
+    
+    const response = await fetch(
+      `https://youtube.googleapis.com/youtube/v3/subscriptions?id=${subscriptionId}`,
+      {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    console.log('Unsubscribe Response Status:', response.status);
+    console.log('Unsubscribe Response Headers:', Object.fromEntries(response.headers.entries()));
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('YouTube API Unsubscribe Error:', {
+        status: response.status,
+        statusText: response.statusText,
+        error: errorData,
+        headers: Object.fromEntries(response.headers.entries())
+      });
+      throw new Error(`Failed to unsubscribe: ${errorData.error?.message || response.statusText}`);
+    }
+
+    return true;
+  } catch (error: any) {
+    console.error('Error in unsubscribeFromChannel:', {
       message: error.message,
       stack: error.stack,
       response: error.response?.data
