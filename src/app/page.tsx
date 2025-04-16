@@ -4,7 +4,6 @@ import { useSession, signIn } from 'next-auth/react';
 import { useEffect, useState } from 'react';
 import { getYouTubeSubscriptions, unsubscribeFromChannel } from '../services/youtube';
 import SwipeCard from '../components/SwipeCard';
-import { motion } from 'framer-motion';
 
 interface Subscription {
   id: string;
@@ -56,21 +55,17 @@ export default function Home() {
     if (direction === 'left') {
       try {
         setIsUnsubscribing(true);
-        console.log('Unsubscribing from channel:', {
-          subscriptionId: currentSubscription.id,
-          channelId: currentSubscription.channelId,
-          name: currentSubscription.name
-        });
-
         await unsubscribeFromChannel(session?.accessToken!, currentSubscription.id);
         
-        // Remove the unsubscribed channel from local state
-        setSubscriptions(prev => prev.filter(sub => sub.id !== currentSubscription.id));
-        
-        // Update current index if we're at the end
-        if (currentIndex >= subscriptions.length - 1) {
-          setCurrentIndex(Math.max(0, subscriptions.length - 2));
-        }
+        // Remove the unsubscribed channel and update index
+        setSubscriptions(prev => {
+          const newSubscriptions = prev.filter(sub => sub.id !== currentSubscription.id);
+          // If we're at the end of the list, go back one
+          if (currentIndex >= newSubscriptions.length) {
+            setCurrentIndex(Math.max(0, newSubscriptions.length - 1));
+          }
+          return newSubscriptions;
+        });
       } catch (err) {
         console.error('Error unsubscribing:', err);
         setError('Failed to unsubscribe. Please try again.');
@@ -78,26 +73,26 @@ export default function Home() {
         setIsUnsubscribing(false);
       }
     } else {
-      // Move to next subscription
-      setCurrentIndex(prev => Math.min(prev + 1, subscriptions.length - 1));
+      // Move to next subscription if there are more
+      if (currentIndex < subscriptions.length - 1) {
+        setCurrentIndex(prev => prev + 1);
+      } else {
+        // If we're at the end, go back to the beginning
+        setCurrentIndex(0);
+      }
     }
   };
 
   if (!session) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-gray-900 to-gray-800 p-4">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="text-center"
-        >
+        <div className="text-center">
           <h1 className="text-4xl font-bold text-white mb-6">YouTube Cleaner</h1>
           <p className="text-gray-300 mb-8 max-w-md">
             Sign in to manage your YouTube subscriptions. Swipe left to remove channels you no longer watch.
           </p>
           <button
-            onClick={() => signIn('google')}
+            onClick={() => signIn('google', { callbackUrl: '/' })}
             className="inline-flex items-center px-6 py-3 bg-red-600 text-white rounded-full shadow-lg hover:bg-red-700 transition-colors"
           >
             Sign in with Google
@@ -105,7 +100,7 @@ export default function Home() {
               <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
             </svg>
           </button>
-        </motion.div>
+        </div>
       </div>
     );
   }
@@ -187,10 +182,12 @@ export default function Home() {
           </div>
         </div>
 
-        <SwipeCard
-          item={subscriptions[currentIndex]}
-          onSwipe={handleSwipe}
-        />
+        {subscriptions[currentIndex] && (
+          <SwipeCard
+            item={subscriptions[currentIndex]}
+            onSwipe={handleSwipe}
+          />
+        )}
       </div>
     </div>
   );
